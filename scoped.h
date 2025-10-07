@@ -4,9 +4,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* Allow user to override the default free function */
+#ifndef SCOPED_FREE_FUNC
+	#define SCOPED_FREE_FUNC	free
+#endif
+
 static inline void _SCOPED_free(void* p)
 {
-	free(*(void**) p);
+	SCOPED_FREE_FUNC(*(void**) p);
 }
 
 static inline void _SCOPED_fclose(FILE** f)
