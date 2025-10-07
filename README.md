@@ -68,11 +68,13 @@ Suppose you have a custom struct that needs a specific cleanup routine:
 ```c
 #include "scoped.h"
 
-typedef struct my_type {
+typedef struct my_type
+{
     char* buffer;
 } my_type;
 
-void my_type_destroy(my_type* obj) {
+void my_type_destroy(my_type* obj)
+{
     free(obj->buffer);
 }
 
