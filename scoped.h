@@ -85,7 +85,7 @@ static inline void _SCOPED_fclose(FILE** f)
 #define scoped_ssize_t		__attribute__((cleanup(_SCOPED_ssize_t_ptr))) ssize_t*
 #define scoped_ptrdiff_t	__attribute__((cleanup(_SCOPED_ptrdiff_t_ptr))) ptrdiff_t*
 
-#define scoped_FILE_t		__attribute__((cleanup(_SCOPED_FILE_ptr))) FILE*
+#define scoped_file_t		__attribute__((cleanup(_SCOPED_FILE_ptr))) FILE*
 
 /* Registration macro for user-defined pointer types */
 #define SCOPED_REGISTER_PTR(T, FUNC)			\
