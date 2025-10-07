@@ -57,7 +57,7 @@ static inline void _SCOPED_fclose(FILE** f)
 #define SCOPED_REGISTER_PTR(T, FUNC)			\
     static inline void _SCOPED_##T##_ptr(T** p)	\
     {											\
-        if (*p) FUNC(*p);						\
+        FUNC(*p);								\
     }
 
 /* Public macro for scoped pointer declaration */
