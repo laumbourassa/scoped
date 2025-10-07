@@ -1,12 +1,13 @@
 # scoped.h
 
-**scoped.h** is a single-header C library for automatic resource management using GCC's `cleanup` attribute. It enables automatic cleanup for pointers and resources, similar to RAII in C++. This makes managing heap-allocated memory and other resources (like file handles) simpler and less error-prone.
+**scoped.h** is a single-header C library for automatic resource management using GCC's `cleanup` attribute. It enables automatic cleanup for pointers and resources, similar to RAII in C++. This makes resource management easier and less error-prone, especially in complex C code.
 
 ## Features
 
 - **Automatic cleanup** of pointers and resources at scope exit
 - **Support for standard C pointer types** (e.g., `int*`, `double*`, `FILE*`)
 - **Easy registration** of custom cleanup functions for user-defined types
+- **Convenient type definitions** for scoped pointers (e.g., `scoped_int_t`, `scoped_file_t`)
 - No dependencies other than the C standard library
 - Header-only: just include `scoped.h` in your project
 
@@ -19,13 +20,18 @@
 
 1. **Include the header:**
 
-```c
-#include "scoped.h"
-```
+    ```c
+    #include "scoped.h"
+    ```
 
 2. **Declare scoped pointers with automatic cleanup:**
 
-Use the `SCOPED_PTR(T)` or `scoped(T)` macro to declare a pointer of type `T*` that will be automatically cleaned up when it goes out of scope.
+    There are two main ways to declare scoped pointers:
+    
+    - Using the type definitions (recommended for common types):  
+      For example, `scoped_int_t` for an `int*` that is automatically freed.
+    - Using the generic macros:  
+      Use the `SCOPED_PTR(T)` or `scoped(T)` macro for any pointer type (including user-defined types with registered cleanup).
 
 ### Example: Automatic `free` for heap memory
 
@@ -36,7 +42,7 @@ Use the `SCOPED_PTR(T)` or `scoped(T)` macro to declare a pointer of type `T*` t
 
 int main(void)
 {
-    scoped(int) x = malloc(sizeof(int)); // Automatically freed
+    scoped_int_t x = malloc(sizeof(int)); // Automatically freed
     if (!x) return 1;
     *x = 42;
     printf("x = %d\n", *x);
@@ -53,7 +59,7 @@ int main(void)
 
 int main(void)
 {
-    scoped(FILE) f = fopen("test.txt", "w"); // Automatically fclose'd
+    scoped_file_t f = fopen("test.txt", "w"); // Automatically fclose'd
     if (!f) return 1;
     fprintf(f, "Hello, scoped file!\n");
     // No need to call fclose(f)! It will be closed automatically.
@@ -91,13 +97,13 @@ int main(void)
 
 ## Supported Types
 
-- Standard scalar pointer types (`int*`, `double*`, etc.)
-- Fixed-width integer pointer types (`int32_t*`, `uint64_t*`, etc.)
-- Standard library types (`FILE*`)
-- Custom types via `SCOPED_REGISTER_PTR`
+- Standard scalar pointer types (`int*`, `double*`, etc.) via type definitions (e.g., `scoped_int_t`, `scoped_double_t`)
+- Fixed-width integer pointer types (`int32_t*`, `uint64_t*`, etc.) via type definitions (e.g., `scoped_int32_t`, `scoped_uint64_t`)
+- Standard library types (`FILE*`) via `scoped_file_t`
+- Custom types via `SCOPED_REGISTER_PTR` and macros (`scoped(T)`)
 
-See `scoped.h` for all predefined types.
+See `scoped.h` for all predefined type definitions.
 
 ## How It Works
 
-The macros use GCC/Clang's `__attribute__((cleanup(func)))` extension to automatically call the cleanup function for the pointer variable when it goes out of scope.
+The macros and type definitions use GCC/Clang's `__attribute__((cleanup(func)))` extension to automatically call the cleanup function for the pointer variable when it goes out of scope.
