@@ -110,8 +110,8 @@ The macros and type definitions use GCC/Clang's `__attribute__((cleanup(func)))`
 
 ## License
 
-The SALUT library is released under the **MIT License**. You are free to use, modify, and distribute it under the terms of the license. See the [MIT License](https://opensource.org/licenses/MIT) for more details.
+scoped.h is released under the **MIT License**. You are free to use, modify, and distribute it under the terms of the license. See the [MIT License](https://opensource.org/licenses/MIT) for more details.
 
 ## Author
 
-This library was developed by **Laurent Mailloux-Bourassa**.
+This header file was developed by **Laurent Mailloux-Bourassa**.
