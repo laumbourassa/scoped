@@ -195,7 +195,6 @@ static inline void _SCOPED_fclose(FILE** f)
 
 /**
  * Safe realloc that preserves the original pointer for cleanup
- * Returns 1 on success, 0 on failure
  */
 #define scoped_realloc(scoped_var, new_count)                                                               \
     ({                                                                                                      \
