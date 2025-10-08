@@ -1,5 +1,5 @@
 /*
- * scoped.h
+ * scoped.h - Scoped Resource Management for C
  *
  * Copyright (c) 2025 Laurent Mailloux-Bourassa
  *
@@ -86,14 +86,30 @@
 	#define SCOPED_FREE_FUNC    free
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+    #define _SCOPED(FUNC)   __attribute__((cleanup(FUNC)))
+#else
+    #warning "scoped.h: cleanup attribute not supported - scoped types will not auto-cleanup"
+    #define _SCOPED(FUNC)
+#endif
+
 static inline void _SCOPED_free(void* p)
 {
-	SCOPED_FREE_FUNC(*(void**) p);
+    void** ptr = (void**)p;
+    if (*ptr)
+    {
+	    SCOPED_FREE_FUNC(*(void**) p);
+        *ptr = NULL;    // Prevent double-free
+    }
 }
 
 static inline void _SCOPED_fclose(FILE** f)
 {
-	fclose(*f);
+    if (*f)
+    {
+        fclose(*f);
+        *f = NULL;  // Prevent double-close
+    }
 }
 
 /* File descriptor support */
@@ -119,21 +135,21 @@ static inline void _SCOPED_close(int* fd)
 #define _SCOPED_LDOUBLE_FUNC    _SCOPED_free
 
 /* Unsigned scalar pointer types */
-#define _SCOPED_UCHAR_FUNC  _SCOPED_free
-#define _SCOPED_USHORT_FUNC _SCOPED_free
-#define _SCOPED_UINT_FUNC   _SCOPED_free
-#define _SCOPED_ULONG_FUNC  _SCOPED_free
-#define _SCOPED_ULLONG_FUNC _SCOPED_free
+#define _SCOPED_UCHAR_FUNC      _SCOPED_free
+#define _SCOPED_USHORT_FUNC     _SCOPED_free
+#define _SCOPED_UINT_FUNC       _SCOPED_free
+#define _SCOPED_ULONG_FUNC      _SCOPED_free
+#define _SCOPED_ULLONG_FUNC     _SCOPED_free
 
 /* Fixed-width integer pointer types */
-#define _SCOPED_INT8_FUNC   _SCOPED_free
-#define _SCOPED_UINT8_FUNC  _SCOPED_free
-#define _SCOPED_INT16_FUNC  _SCOPED_free
-#define _SCOPED_UINT16_FUNC _SCOPED_free
-#define _SCOPED_INT32_FUNC  _SCOPED_free
-#define _SCOPED_UINT32_FUNC _SCOPED_free
-#define _SCOPED_INT64_FUNC  _SCOPED_free
-#define _SCOPED_UINT64_FUNC _SCOPED_free
+#define _SCOPED_INT8_FUNC       _SCOPED_free
+#define _SCOPED_UINT8_FUNC      _SCOPED_free
+#define _SCOPED_INT16_FUNC      _SCOPED_free
+#define _SCOPED_UINT16_FUNC     _SCOPED_free
+#define _SCOPED_INT32_FUNC      _SCOPED_free
+#define _SCOPED_UINT32_FUNC     _SCOPED_free
+#define _SCOPED_INT64_FUNC      _SCOPED_free
+#define _SCOPED_UINT64_FUNC     _SCOPED_free
 
 /* Pointer-sized integer pointer types */
 #define _SCOPED_INTPTR_FUNC     _SCOPED_free
@@ -145,11 +161,11 @@ static inline void _SCOPED_close(int* fd)
 #define _SCOPED_PTRDIFF_FUNC    _SCOPED_free
 
 /* Standard library structs */
-#define _SCOPED_FILE_FUNC	_SCOPED_fclose
+#define _SCOPED_FILE_FUNC       _SCOPED_fclose
 
 /* POSIX support */
 #if SCOPED_HAS_UNISTD
-    #define _SCOPED_FD_FUNC _SCOPED_close
+    #define _SCOPED_FD_FUNC     _SCOPED_close
 #endif
 
 #if SCOPED_HAS_SOCKETS
@@ -157,47 +173,49 @@ static inline void _SCOPED_close(int* fd)
 #endif
 
 /* Type definitions */
-#define scoped_void_t		__attribute__((cleanup(_SCOPED_VOID_FUNC))) void*
-#define scoped_char_t		__attribute__((cleanup(_SCOPED_CHAR_FUNC))) char*
-#define scoped_short_t		__attribute__((cleanup(_SCOPED_SHORT_FUNC))) short*
-#define scoped_int_t		__attribute__((cleanup(_SCOPED_INT_FUNC))) int*
-#define scoped_long_t		__attribute__((cleanup(_SCOPED_LONG_FUNC))) long*
-#define scoped_float_t		__attribute__((cleanup(_SCOPED_FLOAT_FUNC))) float*
-#define scoped_double_t		__attribute__((cleanup(_SCOPED_DOUBLE_FUNC))) double*
-#define scoped_ldouble_t	__attribute__((cleanup(_SCOPED_LDOUBLE_FUNC))) long double*
+#define scoped_void_t		_SCOPED(_SCOPED_VOID_FUNC)      void*
+#define scoped_char_t		_SCOPED(_SCOPED_CHAR_FUNC)      char*
+#define scoped_short_t		_SCOPED(_SCOPED_SHORT_FUNC)     short*
+#define scoped_int_t		_SCOPED(_SCOPED_INT_FUNC)       int*
+#define scoped_long_t		_SCOPED(_SCOPED_LONG_FUNC)      long*
+#define scoped_float_t		_SCOPED(_SCOPED_FLOAT_FUNC)     float*
+#define scoped_double_t		_SCOPED(_SCOPED_DOUBLE_FUNC)    double*
+#define scoped_ldouble_t    _SCOPED(_SCOPED_LDOUBLE_FUNC)   long double*
 
-#define scoped_uchar_t		__attribute__((cleanup(_SCOPED_UCHAR_FUNC))) unsigned char*
-#define scoped_ushort_t		__attribute__((cleanup(_SCOPED_USHORT_FUNC))) unsigned short*
-#define scoped_uint_t		__attribute__((cleanup(_SCOPED_UINT_FUNC))) unsigned int*
-#define scoped_ulong_t		__attribute__((cleanup(_SCOPED_ULONG_FUNC))) unsigned long*
-#define scoped_ullong_t		__attribute__((cleanup(_SCOPED_ULLONG_FUNC))) unsigned long long*
+#define scoped_uchar_t		_SCOPED(_SCOPED_UCHAR_FUNC)     unsigned char*
+#define scoped_ushort_t		_SCOPED(_SCOPED_USHORT_FUNC)    unsigned short*
+#define scoped_uint_t		_SCOPED(_SCOPED_UINT_FUNC)      unsigned int*
+#define scoped_ulong_t		_SCOPED(_SCOPED_ULONG_FUNC)     unsigned long*
+#define scoped_ullong_t		_SCOPED(_SCOPED_ULLONG_FUNC)    unsigned long long*
 
-#define scoped_int8_t		__attribute__((cleanup(_SCOPED_INT8_FUNC))) int8_t*
-#define scoped_uint8_t		__attribute__((cleanup(_SCOPED_UINT8_FUNC))) uint8_t*
-#define scoped_int16_t		__attribute__((cleanup(_SCOPED_INT16_FUNC))) int16_t*
-#define scoped_uint16_t		__attribute__((cleanup(_SCOPED_UINT16_FUNC))) uint16_t*
-#define scoped_int32_t		__attribute__((cleanup(_SCOPED_INT32_FUNC))) int32_t*
-#define scoped_uint32_t		__attribute__((cleanup(_SCOPED_UINT32_FUNC))) uint32_t*
-#define scoped_int64_t		__attribute__((cleanup(_SCOPED_INT64_FUNC))) int64_t*
-#define scoped_uint64_t		__attribute__((cleanup(_SCOPED_UINT64_FUNC))) uint64_t*
+#define scoped_int8_t		_SCOPED(_SCOPED_INT8_FUNC)      int8_t*
+#define scoped_uint8_t		_SCOPED(_SCOPED_UINT8_FUNC)     uint8_t*
+#define scoped_int16_t		_SCOPED(_SCOPED_INT16_FUNC)     int16_t*
+#define scoped_uint16_t		_SCOPED(_SCOPED_UINT16_FUNC)    uint16_t*
+#define scoped_int32_t		_SCOPED(_SCOPED_INT32_FUNC)     int32_t*
+#define scoped_uint32_t		_SCOPED(_SCOPED_UINT32_FUNC)    uint32_t*
+#define scoped_int64_t		_SCOPED(_SCOPED_INT64_FUNC)     int64_t*
+#define scoped_uint64_t		_SCOPED(_SCOPED_UINT64_FUNC)    uint64_t*
 
-#define scoped_intptr_t		__attribute__((cleanup(_SCOPED_INTPTR_FUNC))) intptr_t*
-#define scoped_uintptr_t	__attribute__((cleanup(_SCOPED_UINTPTR_FUNC))) uintptr_t*
+#define scoped_intptr_t		_SCOPED(_SCOPED_INTPTR_FUNC)    intptr_t*
+#define scoped_uintptr_t	_SCOPED(_SCOPED_UINTPTR_FUNC)   uintptr_t*
 
-#define scoped_size_t		__attribute__((cleanup(_SCOPED_SIZE_FUNC))) size_t*
-#define scoped_ssize_t		__attribute__((cleanup(_SCOPED_SSIZE_FUNC))) ssize_t*
-#define scoped_ptrdiff_t	__attribute__((cleanup(_SCOPED_PTRDIFF_FUNC))) ptrdiff_t*
+#define scoped_size_t		_SCOPED(_SCOPED_SIZE_FUNC)      size_t*
+#define scoped_ssize_t		_SCOPED(_SCOPED_SSIZE_FUNC)     ssize_t*
+#define scoped_ptrdiff_t	_SCOPED(_SCOPED_PTRDIFF_FUNC)   ptrdiff_t*
 
-#define scoped_file_t		__attribute__((cleanup(_SCOPED_FILE_FUNC))) FILE*
+#define scoped_file_t		_SCOPED(_SCOPED_FILE_FUNC)      FILE*
 
 /* POSIX types */
 #if SCOPED_HAS_UNISTD
-    #define scoped_fd_t        __attribute__((cleanup(_SCOPED_FD_FUNC))) int
+    #define scoped_fd_t     _SCOPED(_SCOPED_FD_FUNC)        int
 #endif
 
 #if SCOPED_HAS_SOCKETS
-    #define scoped_socket_t    __attribute__((cleanup(_SCOPED_SOCKET_FUNC))) int
+    #define scoped_socket_t _SCOPED(_SCOPED_SOCKET_FUNC)    int
 #endif
+
+/* Helper macros */
 
 /* Registration macro for user-defined pointer types */
 #define SCOPED_REGISTER_CUSTOM_TYPE(T, FUNC)        \
@@ -207,13 +225,16 @@ static inline void _SCOPED_close(int* fd)
 	}
 
 /* Public macro for scoped user-defined type pointer declaration */
-#define scoped(T)   __attribute__((cleanup(_SCOPED_##T##_CUSTOM))) T*
-
-/* Helper macros */
+#define scoped(T)   _SCOPED(_SCOPED_##T##_CUSTOM) T*
 
 /**
  * Transfer ownership from one scoped variable to another
  * Sets source to NULL to prevent double-free
+ * 
+ * Example:
+ *   scoped_int_t a = scoped_malloc(int, 10);
+ *   scoped_int_t b = NULL;
+ *   SCOPED_TRANSFER(b, a); // now b owns the memory, a is NULL
  */
 #define SCOPED_TRANSFER(dest, src)  \
     do {                            \
@@ -224,6 +245,11 @@ static inline void _SCOPED_close(int* fd)
 /**
  * Transfer ownership from raw pointer to scoped variable
  * Sets source to NULL to prevent double-free
+ * 
+ * Example:
+ *   int* raw = malloc(10 * sizeof(int));
+ *   scoped_int_t scoped_arr = NULL;
+ *   SCOPED_TAKE_OWNERSHIP(scoped_arr, raw); // now scoped_arr owns the memory
  */
 #define SCOPED_TAKE_OWNERSHIP(scoped_var, raw_ptr)  \
     do {                                            \
@@ -234,6 +260,10 @@ static inline void _SCOPED_close(int* fd)
 /**
  * Release ownership from scoped variable to raw pointer
  * Sets scoped variable to NULL to prevent cleanup
+ * 
+ * Example:
+ *   scoped_int_t scoped_arr = scoped_malloc(int, 10);
+ *   int* raw = SCOPED_RELEASE(scoped_arr); // now you must manually free(raw)
  */
 #define SCOPED_RELEASE(scoped_var)                              \
     ({                                                          \
@@ -243,17 +273,23 @@ static inline void _SCOPED_close(int* fd)
     })
 
 /**
- * Safe malloc with automatic zero-initialization using custom allocator
+ * Safe malloc using custom allocator
+ * 
+ * Example:
+ *   scoped_int_t arr = scoped_malloc(int, 10);
+ *   // arr is automatically freed when it goes out of scope
  */
 #define scoped_malloc(T, count)                             \
     ({                                                      \
         T* _ptr = SCOPED_MALLOC_FUNC((count) * sizeof(T));  \
-        if (_ptr) memset(_ptr, 0, (count) * sizeof(T));     \
         _ptr;                                               \
     })
 
 /**
  * Safe calloc using custom allocator
+ * 
+ * Example:
+ *   scoped_int_t arr = scoped_calloc(int, 10);
  */
 #define scoped_calloc(T, count)                             \
     ({                                                      \
@@ -262,7 +298,16 @@ static inline void _SCOPED_close(int* fd)
     })
 
 /**
- * Safe realloc that preserves the original pointer for cleanup
+ * Safe realloc using custom allocator
+ * 
+ * Note: If realloc fails, the original pointer remains unchanged
+ * 
+ * Example:
+ *   scoped_int_t arr = scoped_malloc(int, 10);
+ *   if (!scoped_realloc(arr, 20))
+ *   {
+ *       // Handle allocation failure - original memory still valid
+ *   }
  */
 #define scoped_realloc(scoped_var, new_count)                                                               \
     ({                                                                                                      \
