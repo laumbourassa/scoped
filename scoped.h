@@ -28,6 +28,42 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/* Check if we're on a POSIX-compliant system */
+#if defined(__unix__) || defined(__unix) || \
+    (defined(__APPLE__) && defined(__MACH__)) || \
+    defined(__linux__) || defined(_POSIX_VERSION)
+    #define SCOPED_HAS_POSIX 1
+#else
+    #define SCOPED_HAS_POSIX 0
+#endif
+
+/* Check for specific POSIX features */
+#if SCOPED_HAS_POSIX
+    /* Check if we have unistd.h (file descriptors) */
+    #if defined(_POSIX_VERSION) || defined(__unix__) || defined(__linux__)
+        #include <unistd.h>
+        #define SCOPED_HAS_UNISTD 1
+    #else
+        #define SCOPED_HAS_UNISTD 0
+    #endif
+
+    /* Check if we have socket support */
+    #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+        #include <sys/socket.h>
+        #define SCOPED_HAS_SOCKETS 1
+    #elif defined(__linux__) || defined(__APPLE__)
+        /* Linux and macOS have sockets even if _POSIX_VERSION isn't defined */
+        #include <sys/socket.h>
+        #define SCOPED_HAS_SOCKETS 1
+    #else
+        #define SCOPED_HAS_SOCKETS 0
+    #endif
+#else
+    /* Not a POSIX system */
+    #define SCOPED_HAS_UNISTD 0
+    #define SCOPED_HAS_SOCKETS 0
+#endif
+
 /* Allow user to override the default malloc function */
 #ifndef SCOPED_MALLOC_FUNC
 	#define SCOPED_MALLOC_FUNC  malloc
@@ -57,6 +93,18 @@ static inline void _SCOPED_fclose(FILE** f)
 {
 	fclose(*f);
 }
+
+/* File descriptor support */
+#if SCOPED_HAS_UNISTD
+static inline void _SCOPED_close(int* fd)
+{
+    if (*fd >= 0)
+    {
+        close(*fd);
+        *fd = -1;   // Prevent double-close
+    }
+}
+#endif
 
 /* Core C scalar pointer types */
 #define _SCOPED_VOID_FUNC       _SCOPED_free
@@ -97,6 +145,15 @@ static inline void _SCOPED_fclose(FILE** f)
 /* Standard library structs */
 #define _SCOPED_FILE_FUNC	_SCOPED_fclose
 
+/* POSIX support */
+#if SCOPED_HAS_UNISTD
+    #define _SCOPED_FD_FUNC _SCOPED_close
+#endif
+
+#if SCOPED_HAS_SOCKETS
+    #define _SCOPED_SOCKET_FUNC _SCOPED_close
+#endif
+
 /* Type definitions */
 #define scoped_void_t		__attribute__((cleanup(_SCOPED_VOID_FUNC))) void*
 #define scoped_char_t		__attribute__((cleanup(_SCOPED_CHAR_FUNC))) char*
@@ -130,6 +187,15 @@ static inline void _SCOPED_fclose(FILE** f)
 #define scoped_ptrdiff_t	__attribute__((cleanup(_SCOPED_PTRDIFF_FUNC))) ptrdiff_t*
 
 #define scoped_file_t		__attribute__((cleanup(_SCOPED_FILE_FUNC))) FILE*
+
+/* POSIX types */
+#if SCOPED_HAS_UNISTD
+    #define scoped_fd_t        __attribute__((cleanup(_SCOPED_FD_FUNC))) int
+#endif
+
+#if SCOPED_HAS_SOCKETS
+    #define scoped_socket_t    __attribute__((cleanup(_SCOPED_SOCKET_FUNC))) int
+#endif
 
 /* Registration macro for user-defined pointer types */
 #define SCOPED_REGISTER_CUSTOM_TYPE(T, FUNC)        \
