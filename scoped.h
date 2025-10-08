@@ -27,41 +27,43 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 
 /* Check if we're on a POSIX-compliant system */
-#if defined(__unix__) || defined(__unix) || \
-    (defined(__APPLE__) && defined(__MACH__)) || \
-    defined(__linux__) || defined(_POSIX_VERSION)
-    #define SCOPED_HAS_POSIX 1
+#if defined(__unix__) || defined(__unix) ||         \
+	(defined(__APPLE__) && defined(__MACH__)) ||    \
+	defined(__linux__) || defined(_POSIX_VERSION)
+		#define SCOPED_HAS_POSIX 1
 #else
-    #define SCOPED_HAS_POSIX 0
+	#define SCOPED_HAS_POSIX 0
 #endif
 
 /* Check for specific POSIX features */
 #if SCOPED_HAS_POSIX
-    /* Check if we have unistd.h (file descriptors) */
-    #if defined(_POSIX_VERSION) || defined(__unix__) || defined(__linux__)
-        #include <unistd.h>
-        #define SCOPED_HAS_UNISTD 1
-    #else
-        #define SCOPED_HAS_UNISTD 0
-    #endif
+	/* Check if we have unistd.h (file descriptors) */
+	#if defined(_POSIX_VERSION) || defined(__unix__) || defined(__linux__)
+		#include <unistd.h>
+		#define SCOPED_HAS_UNISTD 1
+	#else
+		#define SCOPED_HAS_UNISTD 0
+	#endif
 
-    /* Check if we have socket support */
-    #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
-        #include <sys/socket.h>
-        #define SCOPED_HAS_SOCKETS 1
-    #elif defined(__linux__) || defined(__APPLE__)
-        /* Linux and macOS have sockets even if _POSIX_VERSION isn't defined */
-        #include <sys/socket.h>
-        #define SCOPED_HAS_SOCKETS 1
-    #else
-        #define SCOPED_HAS_SOCKETS 0
-    #endif
+	/* Check if we have socket support */
+	#if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L
+		#include <sys/socket.h>
+		#define SCOPED_HAS_SOCKETS 1
+	#elif defined(__linux__) || defined(__APPLE__)
+		/* Linux and macOS have sockets even if _POSIX_VERSION isn't defined */
+		#include <sys/socket.h>
+		#define SCOPED_HAS_SOCKETS 1
+	#else
+		#define SCOPED_HAS_SOCKETS 0
+	#endif
 #else
-    /* Not a POSIX system */
-    #define SCOPED_HAS_UNISTD 0
-    #define SCOPED_HAS_SOCKETS 0
+	/* Not a POSIX system */
+	#define SCOPED_HAS_UNISTD 0
+	#define SCOPED_HAS_SOCKETS 0
 #endif
 
 /* Allow user to override the default malloc function */
