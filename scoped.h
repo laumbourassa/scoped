@@ -98,7 +98,7 @@ static inline void _SCOPED_free(void* p)
     void** ptr = (void**)p;
     if (*ptr)
     {
-	    SCOPED_FREE_FUNC(*(void**) p);
+	    SCOPED_FREE_FUNC(*ptr);
         *ptr = NULL;    // Prevent double-free
     }
 }
@@ -221,7 +221,11 @@ static inline void _SCOPED_close(int* fd)
 #define SCOPED_REGISTER_CUSTOM_TYPE(T, FUNC)        \
 	static inline void _SCOPED_##T##_CUSTOM(T** p)  \
 	{											    \
-		FUNC(*p);								    \
+        if (*p)                                     \
+        {                                           \
+		    FUNC(*p);                               \
+            *p = NULL;                              \
+        }                                           \
 	}
 
 /* Public macro for scoped user-defined type pointer declaration */
