@@ -173,63 +173,73 @@ static inline void _SCOPED_close(int* fd)
 #endif
 
 /* Type definitions */
-#define scoped_void_t		_SCOPED(_SCOPED_VOID_FUNC)      void*
-#define scoped_char_t		_SCOPED(_SCOPED_CHAR_FUNC)      char*
-#define scoped_short_t		_SCOPED(_SCOPED_SHORT_FUNC)     short*
-#define scoped_int_t		_SCOPED(_SCOPED_INT_FUNC)       int*
-#define scoped_long_t		_SCOPED(_SCOPED_LONG_FUNC)      long*
-#define scoped_float_t		_SCOPED(_SCOPED_FLOAT_FUNC)     float*
-#define scoped_double_t		_SCOPED(_SCOPED_DOUBLE_FUNC)    double*
-#define scoped_ldouble_t    _SCOPED(_SCOPED_LDOUBLE_FUNC)   long double*
+#define scoped_void_p		_SCOPED(_SCOPED_VOID_FUNC)      void*
+#define scoped_char_p		_SCOPED(_SCOPED_CHAR_FUNC)      char*
+#define scoped_short_p		_SCOPED(_SCOPED_SHORT_FUNC)     short*
+#define scoped_int_p		_SCOPED(_SCOPED_INT_FUNC)       int*
+#define scoped_long_p		_SCOPED(_SCOPED_LONG_FUNC)      long*
+#define scoped_float_p		_SCOPED(_SCOPED_FLOAT_FUNC)     float*
+#define scoped_double_p		_SCOPED(_SCOPED_DOUBLE_FUNC)    double*
+#define scoped_ldouble_p    _SCOPED(_SCOPED_LDOUBLE_FUNC)   long double*
 
-#define scoped_uchar_t		_SCOPED(_SCOPED_UCHAR_FUNC)     unsigned char*
-#define scoped_ushort_t		_SCOPED(_SCOPED_USHORT_FUNC)    unsigned short*
-#define scoped_uint_t		_SCOPED(_SCOPED_UINT_FUNC)      unsigned int*
-#define scoped_ulong_t		_SCOPED(_SCOPED_ULONG_FUNC)     unsigned long*
-#define scoped_ullong_t		_SCOPED(_SCOPED_ULLONG_FUNC)    unsigned long long*
+#define scoped_uchar_p		_SCOPED(_SCOPED_UCHAR_FUNC)     unsigned char*
+#define scoped_ushort_p		_SCOPED(_SCOPED_USHORT_FUNC)    unsigned short*
+#define scoped_uint_p		_SCOPED(_SCOPED_UINT_FUNC)      unsigned int*
+#define scoped_ulong_p		_SCOPED(_SCOPED_ULONG_FUNC)     unsigned long*
+#define scoped_ullong_p		_SCOPED(_SCOPED_ULLONG_FUNC)    unsigned long long*
 
-#define scoped_int8_t		_SCOPED(_SCOPED_INT8_FUNC)      int8_t*
-#define scoped_uint8_t		_SCOPED(_SCOPED_UINT8_FUNC)     uint8_t*
-#define scoped_int16_t		_SCOPED(_SCOPED_INT16_FUNC)     int16_t*
-#define scoped_uint16_t		_SCOPED(_SCOPED_UINT16_FUNC)    uint16_t*
-#define scoped_int32_t		_SCOPED(_SCOPED_INT32_FUNC)     int32_t*
-#define scoped_uint32_t		_SCOPED(_SCOPED_UINT32_FUNC)    uint32_t*
-#define scoped_int64_t		_SCOPED(_SCOPED_INT64_FUNC)     int64_t*
-#define scoped_uint64_t		_SCOPED(_SCOPED_UINT64_FUNC)    uint64_t*
+#define scoped_int8_p		_SCOPED(_SCOPED_INT8_FUNC)      int8_t*
+#define scoped_uint8_p		_SCOPED(_SCOPED_UINT8_FUNC)     uint8_t*
+#define scoped_int16_p		_SCOPED(_SCOPED_INT16_FUNC)     int16_t*
+#define scoped_uint16_p		_SCOPED(_SCOPED_UINT16_FUNC)    uint16_t*
+#define scoped_int32_p		_SCOPED(_SCOPED_INT32_FUNC)     int32_t*
+#define scoped_uint32_p		_SCOPED(_SCOPED_UINT32_FUNC)    uint32_t*
+#define scoped_int64_p		_SCOPED(_SCOPED_INT64_FUNC)     int64_t*
+#define scoped_uint64_p		_SCOPED(_SCOPED_UINT64_FUNC)    uint64_t*
 
-#define scoped_intptr_t		_SCOPED(_SCOPED_INTPTR_FUNC)    intptr_t*
-#define scoped_uintptr_t	_SCOPED(_SCOPED_UINTPTR_FUNC)   uintptr_t*
+#define scoped_intptr_p		_SCOPED(_SCOPED_INTPTR_FUNC)    intptr_t*
+#define scoped_uintptr_p	_SCOPED(_SCOPED_UINTPTR_FUNC)   uintptr_t*
 
-#define scoped_size_t		_SCOPED(_SCOPED_SIZE_FUNC)      size_t*
-#define scoped_ssize_t		_SCOPED(_SCOPED_SSIZE_FUNC)     ssize_t*
-#define scoped_ptrdiff_t	_SCOPED(_SCOPED_PTRDIFF_FUNC)   ptrdiff_t*
+#define scoped_size_p		_SCOPED(_SCOPED_SIZE_FUNC)      size_t*
+#define scoped_ssize_p		_SCOPED(_SCOPED_SSIZE_FUNC)     ssize_t*
+#define scoped_ptrdiff_p	_SCOPED(_SCOPED_PTRDIFF_FUNC)   ptrdiff_t*
 
-#define scoped_file_t		_SCOPED(_SCOPED_FILE_FUNC)      FILE*
+#define scoped_file_p		_SCOPED(_SCOPED_FILE_FUNC)      FILE*
 
 /* POSIX types */
 #if SCOPED_HAS_UNISTD
-    #define scoped_fd_t     _SCOPED(_SCOPED_FD_FUNC)        int
+    #define scoped_fd       _SCOPED(_SCOPED_FD_FUNC)        int
 #endif
 
 #if SCOPED_HAS_SOCKETS
-    #define scoped_socket_t _SCOPED(_SCOPED_SOCKET_FUNC)    int
+    #define scoped_socket   _SCOPED(_SCOPED_SOCKET_FUNC)    int
 #endif
 
 /* Helper macros */
 
-/* Registration macro for user-defined pointer types */
+/* Registration macro for user-defined types */
 #define SCOPED_REGISTER_CUSTOM_TYPE(T, FUNC)        \
-	static inline void _SCOPED_##T##_CUSTOM(T** p)  \
+	static inline void _SCOPED_##T##_CUSTOM(T* p)   \
 	{											    \
-        if (*p)                                     \
-        {                                           \
-		    FUNC(*p);                               \
-            *p = NULL;                              \
-        }                                           \
+        FUNC(p);                                    \
 	}
 
+/* Registration macro for user-defined pointer types */
+#define SCOPED_REGISTER_CUSTOM_TYPE_PTR(T, FUNC)        \
+	static inline void _SCOPED_##T##_PTR_CUSTOM(T** p)  \
+	{											        \
+        if (*p)                                         \
+        {                                               \
+		    FUNC(*p);                                   \
+            *p = NULL;                                  \
+        }                                               \
+	}
+
+/* Public macro for scoped user-defined type declaration */
+#define scoped(T)   _SCOPED(_SCOPED_##T##_CUSTOM) T
+
 /* Public macro for scoped user-defined type pointer declaration */
-#define scoped(T)   _SCOPED(_SCOPED_##T##_CUSTOM) T*
+#define scoped_p(T) _SCOPED(_SCOPED_##T##_PTR_CUSTOM) T*
 
 /**
  * Transfer ownership from one scoped variable to another
