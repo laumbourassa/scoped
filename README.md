@@ -1,14 +1,14 @@
 # scoped.h
 
-**scoped.h** is a single-header C library for automatic resource management using GCC/Clang's `cleanup` attribute. It enables automatic cleanup for pointers and resources, similar to RAII in C++. This makes resource leaks less likely, and your code cleaner and safer.
+**scoped.h** is a single-header C library for automatic resource management using GCC/Clang's `cleanup` attribute. It enables automatic cleanup for pointers and resources, similar to RAII in C++. This helps prevent resource leaks and manual cleanup errors in C code.
 
 ## Features
 
 - **Automatic cleanup** of pointers and resources at scope exit
-- **Support for standard C pointer types** (e.g., `int*`, `double*`, `FILE*`)
+- **Support for standard C pointer types** (`int*`, `double*`, `FILE*`, etc.)
 - **Support for POSIX resources** (file descriptors, sockets) on compatible platforms
 - **Easy registration** of custom cleanup functions for user-defined types
-- **Convenient type definitions** for scoped pointers (e.g., `scoped_int_t`, `scoped_file_t`)
+- **Convenient type definitions** for scoped pointers (e.g., `scoped_int_p`, `scoped_file_p`)
 - **Ownership transfer macros** (`SCOPED_TRANSFER`, `SCOPED_TAKE_OWNERSHIP`, `SCOPED_RELEASE`)
 - **Custom allocator support** (override malloc/calloc/realloc/free)
 - No dependencies other than the C standard library
@@ -32,9 +32,9 @@
     There are two main ways to declare scoped pointers:
 
     - Using the provided type definitions (recommended for common types):  
-      For example, `scoped_int_t` for an `int*` that is automatically freed.
+      For example, `scoped_int_p` for an automatically freed `int*`.
     - Using the generic macro for custom types:  
-      Use the `scoped(T)` macro for any pointer type (after registering a cleanup function).
+      Use the `scoped(T)` macro for any type (after registering a cleanup function).
 
 ### Example: Automatic `free` for heap memory
 
@@ -45,7 +45,7 @@
 
 int main(void)
 {
-    scoped_int_t x = scoped_malloc(int, 1); // Automatically freed
+    scoped_int_p x = scoped_malloc(int, 1); // Automatically freed
     if (!x) return 1;
     *x = 42;
     printf("x = %d\n", *x);
@@ -62,7 +62,7 @@ int main(void)
 
 int main(void)
 {
-    scoped_file_t f = fopen("test.txt", "w"); // Automatically fclose'd
+    scoped_file_p f = fopen("test.txt", "w"); // Automatically fclose'd
     if (!f) return 1;
     fprintf(f, "Hello, scoped file!\n");
     // No need to call fclose(f)! It will be closed automatically.
@@ -74,19 +74,16 @@ int main(void)
 
 ```c
 #include "scoped.h"
-#if SCOPED_HAS_UNISTD
 #include <unistd.h>
 #include <fcntl.h>
 #endif
 
 int main(void)
 {
-#if SCOPED_HAS_UNISTD
-    scoped_fd_t fd = open("test.txt", O_CREAT | O_WRONLY, 0644); // Automatically closed
+    scoped_fd fd = open("test.txt", O_CREAT | O_WRONLY, 0644); // Automatically closed
     if (fd < 0) return 1;
     write(fd, "Hello, scoped fd!\n", 18);
     // No need to call close(fd)! It will be closed automatically.
-#endif
     return 0;
 }
 ```
@@ -108,11 +105,11 @@ void my_type_destroy(my_type* obj)
     free(obj->buffer);
 }
 
-SCOPED_REGISTER_CUSTOM_TYPE(my_type, my_type_destroy)
+SCOPED_REGISTER_CUSTOM_TYPE_PTR(my_type, my_type_destroy)
 
 int main(void)
 {
-    scoped(my_type) obj = scoped_malloc(my_type, 1); // Automatically cleaned up
+    scoped_p(my_type) obj = scoped_malloc(my_type, 1); // Automatically cleaned up
     obj->buffer = scoped_malloc(char, 128);
     // No need to call my_type_destroy(obj)! It will be called automatically.
     return 0;
@@ -124,8 +121,8 @@ int main(void)
 - **Transfer ownership between scoped variables:**
 
     ```c
-    scoped_int_t a = scoped_malloc(int, 10);
-    scoped_int_t b = NULL;
+    scoped_int_p a = scoped_malloc(int, 10);
+    scoped_int_p b = NULL;
     SCOPED_TRANSFER(b, a); // b owns the memory, a is NULL
     ```
 
@@ -133,14 +130,14 @@ int main(void)
 
     ```c
     int* raw = malloc(10 * sizeof(int));
-    scoped_int_t scoped_arr = NULL;
+    scoped_int_p scoped_arr = NULL;
     SCOPED_TAKE_OWNERSHIP(scoped_arr, raw); // scoped_arr owns memory, raw is NULL
     ```
 
 - **Release ownership to raw pointer:**
 
     ```c
-    scoped_int_t scoped_arr = scoped_malloc(int, 10);
+    scoped_int_p scoped_arr = scoped_malloc(int, 10);
     int* raw = SCOPED_RELEASE(scoped_arr); // you must manually free(raw)
     ```
 
@@ -156,17 +153,17 @@ You can override the default memory functions by defining macros before includin
 
 ## Supported Types
 
-- Standard scalar pointer types (`int*`, `double*`, etc.) via type definitions (e.g., `scoped_int_t`, `scoped_double_t`)
-- Fixed-width integer pointer types (`int32_t*`, `uint64_t*`, etc.) via type definitions (e.g., `scoped_int32_t`, `scoped_uint64_t`)
-- Standard library types (`FILE*`) via `scoped_file_t`
-- POSIX resources (`scoped_fd_t`, `scoped_socket_t`) on supported platforms
-- Custom types via `SCOPED_REGISTER_CUSTOM_TYPE` and macros (`scoped(T)`)
+- Standard scalar pointer types (`int*`, `double*`, etc.) via type definitions (e.g., `scoped_int_p`, `scoped_double_p`)
+- Fixed-width integer pointer types (`int32_t*`, `uint64_t*`, etc.) via type definitions (e.g., `scoped_int32_p`, `scoped_uint64_p`)
+- Standard library types (`FILE*`) via `scoped_file_p`
+- POSIX resources (`scoped_fd`, `scoped_socket`) on supported platforms
+- Custom types via `SCOPED_REGISTER_CUSTOM_TYPE`, `SCOPED_REGISTER_CUSTOM_TYPE_PTR` and macros (`scoped(T)` and `scoped_p(T)`)
 
 See `scoped.h` for all predefined type definitions.
 
 ## How It Works
 
-The macros and type definitions use GCC/Clang's `__attribute__((cleanup(func)))` extension to automatically call the cleanup function for the pointer variable when it goes out of scope. If your compiler doesn't support this attribute, the macros will have no effect and a warning is issued.
+The macros and type definitions use GCC/Clang's `__attribute__((cleanup(func)))` extension to automatically call the cleanup function for the variable when it goes out of scope. If your compiler does not support this attribute, a warning will be issued and auto-cleanup will not occur.
 
 ## License
 
