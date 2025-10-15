@@ -103,6 +103,7 @@ typedef struct my_type
 void my_type_destroy(my_type* obj)
 {
     free(obj->buffer);
+    free(obj);
 }
 
 SCOPED_REGISTER_CUSTOM_TYPE_PTR(my_type, my_type_destroy)
