@@ -34,7 +34,7 @@
     - Using the provided type definitions (recommended for common types):  
       For example, `scoped_int_p` for an automatically freed `int*`.
     - Using the generic macro for custom types:  
-      Use the `scoped(T)` macro for any type (after registering a cleanup function).
+      Use the `scoped(T)` or `scoped_p(T)` macros for any type (after registering a cleanup function).
 
 ### Example: Automatic `free` for heap memory
 
